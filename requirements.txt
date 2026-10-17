@@ -4,3 +4,4 @@ pytest
 faster-whisper
 watchdog
 pydub
+google-genai
