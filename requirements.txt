@@ -5,3 +5,5 @@ faster-whisper
 watchdog
 pydub
 google-genai
+edge-tts
+moviepy
