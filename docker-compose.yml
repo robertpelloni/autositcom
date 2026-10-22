@@ -1,0 +1,15 @@
+version: '3.8'
+
+services:
+  autositcom-pipeline:
+    build: .
+    container_name: autositcom_pipeline
+    restart: unless-stopped
+    volumes:
+      - ./data:/app/data
+      - ./docs:/app/docs
+    env_file:
+      - .env
+    environment:
+      - PYTHONUNBUFFERED=1
+    command: python -m src.main
