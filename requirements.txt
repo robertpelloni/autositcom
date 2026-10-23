@@ -11,3 +11,6 @@ google-api-python-client
 google-auth-oauthlib
 google-auth-httplib2
 tweepy
+streamlit
+pystray
+Pillow
