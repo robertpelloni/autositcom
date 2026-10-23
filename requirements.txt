@@ -1,0 +1,16 @@
+pydantic
+pydantic-settings
+pytest
+faster-whisper
+watchdog
+pydub
+google-genai
+edge-tts
+moviepy
+google-api-python-client
+google-auth-oauthlib
+google-auth-httplib2
+tweepy
+streamlit
+pystray
+Pillow
