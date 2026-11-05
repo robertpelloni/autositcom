@@ -1,0 +1,16 @@
+{
+    "characters": {
+        "JERRY": {
+            "description": "Neurotic, observational, always analyzing minor social infractions."
+        },
+        "GEORGE": {
+            "description": "Cheap, petty, constantly scheming to avoid work or responsibility."
+        },
+        "ELAINE": {
+            "description": "Assertive, superficial, gets easily annoyed by quirky habits."
+        },
+        "KRAMER": {
+            "description": "Eccentric, bursts into rooms, comes up with bizarre business ideas."
+        }
+    }
+}
