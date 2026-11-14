@@ -59,3 +59,4 @@ commit named `feat/docs: vX.Y.Z ...`). Pushes fail until item 1 is fixed.
 
 ## Update 0.3.3
 - FULL SUITE GREEN: Python 3.12 exists on this machine; .venv312 created, `pip install -r requirements.txt` succeeds, **32/32 tests pass** including ingestion+renderer. scripts/run.ps1 now prefers .venv312. GEMINI_API_KEY + OPENAI + ELEVENLABS are set in the ambient environment (no .env file; YOUTUBE/TIKTOK unset). Remaining human blockers: git push auth, real BOB & LUM bible. A live cycle is now possible once real transcripts exist.
+- Live-cycle attempt (0.3.4): seeded sample transcripts, ran --once on .venv312. Result: Gemini returned 401 UNAUTHENTICATED / ACCESS_TOKEN_TYPE_UNSUPPORTED - the ambient GEMINI_API_KEY is not a valid Gemini API key. Pipeline degraded correctly (error logged, 'No high-value topics', exit 0, no crash). Seeded sample removed afterward. Human must supply a valid Gemini key (aistudio.google.com) in .env as GEMINI_API_KEY.
