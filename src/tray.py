@@ -37,6 +37,22 @@ def _spawn(args):
 def on_open_dashboard(icon, item): webbrowser.open(DASH_URL)  # just browse; dashboard may already run via Docker/run.ps1
 def on_start_dashboard(icon, item): _spawn([sys.executable, "-m", "streamlit", "run", "src/dashboard.py", "--server.port", "8501"])
 def on_start_pipeline(icon, item): _spawn([sys.executable, "-m", "src.main"])
+def cycle_command(): return [sys.executable, "-m", "src.main", "--once"]
+def on_run_cycle(icon, item):
+    """Run one pipeline cycle from the tray; notify when it finishes and
+    loudly when any stage failed (health re-read from pipeline.log)."""
+    def work():
+        os.makedirs("data", exist_ok=True)
+        with open("data/pipeline.log", "a") as f:
+            f.write("\n--- tray: run cycle ---\n"); f.flush()
+            p = _spawn(cycle_command()); p.wait()
+        h = tray_health()
+        bad = [s for s, v in h.items() if v == "fail"]
+        icon.notify(f"FAILED: {', '.join(bad)} — see dashboard logs" if bad else "Cycle finished", "Autositcom")
+        try: icon.icon = create_image()
+        except Exception: pass
+    threading.Thread(target=work, daemon=True).start()
+    icon.notify("Pipeline cycle started", "Autositcom")
 def on_stop_servers(icon, item):
     for p in _children:
         try: p.terminate()
@@ -56,6 +72,7 @@ def run_tray():
         pystray.MenuItem("Open Dashboard (browser)", on_open_dashboard, default=True),
         pystray.MenuItem("Start Dashboard server", on_start_dashboard),
         pystray.MenuItem("Start Pipeline", on_start_pipeline),
+        pystray.MenuItem("Run Cycle Now", on_run_cycle),
         pystray.MenuItem("Stop Servers", on_stop_servers),
         pystray.MenuItem("Quit (stop servers + exit)", on_quit),
     )

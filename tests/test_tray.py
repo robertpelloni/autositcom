@@ -1,4 +1,8 @@
-from src.tray import health_color
+import sys
+from src.tray import cycle_command, health_color
+
+def test_cycle_command_is_single_iteration():
+    assert cycle_command() == [sys.executable, "-m", "src.main", "--once"]
 
 def test_color_red_on_any_failure():
     assert health_color({"distiller": "ok", "renderer": "fail"}) == (180, 30, 30)

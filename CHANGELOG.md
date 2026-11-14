@@ -52,3 +52,7 @@
 ## [0.2.8] - 2026-11-13
 ### Changed
 - README/VISION/IDEAS synced with 0.2.x reality (consolidated dashboard, health badges, tray colors, E2E-tested orchestration; live-episode blockers stated plainly).
+
+## [0.2.9] - 2026-11-13
+### Added
+- Tray 'Run Cycle Now' menu action: spawns src.main --once (BelowNormal, data/pipeline.log), notifies on start/finish, loudly notifies failed stages, and refreshes the health-colored icon.
