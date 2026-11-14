@@ -80,3 +80,7 @@
 ## [0.3.5] - 2026-11-13
 ### Added
 - Dashboard Scriptwriter section: editable Character Bible textarea + Save (JSON/characters validated) so operators can replace the DRAFT BOB & LUM descriptions without hand-editing files. Browser-verified via agent-browser: all sections, health badges, and Help tooltips render.
+
+## [0.3.6] - 2026-11-14
+### Fixed
+- CRITICAL dashboard crash found by headless-browser verification: st.info(help=...) raised TypeError in Streamlit 1.67, halting the page at Latest Episode - every section below (controls, distiller, bible editor, renderer, publisher, logs) never rendered. Fixed; added AppTest regression test (tests/test_dashboard_bible.py) asserting the full page renders with no exception, valid bible JSON saves with confirmation, and invalid JSON errors without touching the file.

@@ -63,7 +63,7 @@ if lv:
     vc.video(lv)
     dc.write(f"**File:** `{os.path.basename(lv)}`\n\n**Created:** {time.ctime(os.path.getctime(lv))}\n\n**Size:** {os.path.getsize(lv)//1024} KB")
     if dc.button("▶ Publish this episode now", help="Calls SocialUploader.publish_all() for YouTube/TikTok/X per Publisher toggles below. Currently MOCK — no real posts."): st.toast("Mock publish queued (no live APIs yet)", icon="📤")
-else: st.info("No episodes yet — run a cycle below or drop WAVs into the ingest folder.", help="Renderer writes MP4s to RENDER_OUTPUT_DIR (data/render_output).")
+else: st.info("No episodes yet — run a cycle below or drop WAVs into the ingest folder. (Renderer writes MP4s to RENDER_OUTPUT_DIR.)")
 
 # ── 2. PIPELINE CONTROLS ────────────────────────────────────────────────────
 st.header("▶ Pipeline Controls", help="src/main.py run_pipeline_iteration(): distill → script → render → publish, then sleep. Ingestion/transcription run continuously in background.")
