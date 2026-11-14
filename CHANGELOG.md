@@ -28,3 +28,7 @@
 ## [0.2.2] - 2026-11-13
 ### Changed
 - run_pipeline_iteration: per-stage try/except - [STAGE-FAIL] distiller/scriptwriter/renderer/publisher logged, dependents [STAGE-SKIP], cycle always returns cleanly (verified: --once exits 0 on empty input).
+
+## [0.2.3] - 2026-11-13
+### Added
+- End-to-end integration test (tests/test_e2e.py) over committed fixture tests/fixtures/sample_transcripts.jsonl + generated real 10s WAV: distill->script->render->publish orchestration proven with external APIs stubbed at the repo's existing seams.
