@@ -76,3 +76,7 @@
 ## [0.3.4] - 2026-11-13
 ### Changed
 - Character bible corrected from Seinfeld placeholders to the real cast BOB (Robert Pelloni) and LUM (Lumbros Kourlos); descriptions marked DRAFT pending the canonical screenplay text. Voice/color maps and all test fixtures updated to match.
+
+## [0.3.5] - 2026-11-13
+### Added
+- Dashboard Scriptwriter section: editable Character Bible textarea + Save (JSON/characters validated) so operators can replace the DRAFT BOB & LUM descriptions without hand-editing files. Browser-verified via agent-browser: all sections, health badges, and Help tooltips render.

@@ -92,7 +92,12 @@ with st.form("distiller"):
 # ── 5. SCRIPTWRITER & LORE ──────────────────────────────────────────────────
 st.header("✍ Scriptwriter & Lore Validation", help="src/scriptwriter/: ScriptGenerator builds a SitcomScript from the top topic; validator.py checks every character against docs/CHARACTER_BIBLE.json.")
 s1, s2 = st.columns(2)
-s1.text_area("Character bible (docs/CHARACTER_BIBLE.json)", open("docs/CHARACTER_BIBLE.json").read()[:800] if os.path.exists("docs/CHARACTER_BIBLE.json") else "missing", height=140, help="Canonical BOB & LUM characters. validate_script_characters() rejects scripts inventing unlisted characters.", disabled=True)
+bible_text = s1.text_area("Character bible (docs/CHARACTER_BIBLE.json)", open("docs/CHARACTER_BIBLE.json").read() if os.path.exists("docs/CHARACTER_BIBLE.json") else "{}", height=160, key="bible_edit", help="Canonical BOB & LUM characters. validate_script_characters() rejects scripts inventing unlisted characters. Edit the DRAFT descriptions here with the real screenplay text, then Save.")
+if s1.button("Save character bible", help="Writes docs/CHARACTER_BIBLE.json after JSON + non-empty 'characters' validation. The next generated script is validated against the saved cast."):
+    try:
+        parsed = json.loads(bible_text); assert parsed.get("characters"), "missing 'characters'"
+        open("docs/CHARACTER_BIBLE.json", "w").write(json.dumps(parsed, indent=4)); s1.success(f"Bible saved — cast: {', '.join(parsed['characters'])}")
+    except Exception as e: s1.error(f"Not saved: {e}")
 s2.selectbox("Episode template", ["standard", "cold-open", "bottle", "clip-show"], help="docs/EPISODE_TEMPLATES.md structures. Passed as context to ScriptGenerator.generate_script().")
 if s2.button("Check character bible", help="Loads docs/CHARACTER_BIBLE.json via validator.load_character_bible() and lists canonical characters. Full validate_script_characters() runs inside ScriptGenerator on each generated script."):
     try:
