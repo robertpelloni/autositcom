@@ -68,3 +68,7 @@
 ## [0.3.2] - 2026-11-13
 ### Changed
 - HANDOFF.md rewritten as a complete resume document (verified state, blockers needing a human, operating loop, ordered next steps); ROADMAP progress appended.
+
+## [0.3.3] - 2026-11-13
+### Fixed
+- Full test suite green (32/32) on the newly created Python 3.12 .venv312 - ingestion and renderer suites now run; scripts/run.ps1 prefers .venv312. Noted ambient GEMINI/OPENAI/ELEVENLABS keys present (no .env file).
