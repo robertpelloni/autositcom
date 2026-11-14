@@ -5,8 +5,9 @@ Dashboard opens in the browser (never spawns a duplicate Streamlit);
 Quit terminates child processes it started, then exits.
 Run: python -m src.tray   (below-normal priority recommended, see scripts/run.ps1)
 """
-import os, subprocess, sys, webbrowser
-import pystray
+import os, subprocess, sys, threading, webbrowser
+# NOTE: pystray imported lazily in run_tray() — WHY: on headless Linux it opens
+# an X display at import time, which crashed CI collection of the tray tests.
 from PIL import Image, ImageDraw
 
 _children: list[subprocess.Popen] = []
@@ -67,6 +68,7 @@ def _status(item):
     return f"Autositcom — {len(_children)} server(s) | {stages}"
 
 def run_tray():
+    import pystray
     menu = pystray.Menu(
         pystray.MenuItem(_status, None, enabled=False),
         pystray.MenuItem("Open Dashboard (browser)", on_open_dashboard, default=True),
