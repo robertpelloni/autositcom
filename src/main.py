@@ -13,13 +13,7 @@ def load_comedy_threshold(default: float = 7.0) -> float:
     tuning in the UI must reach the pipeline without editing code or env."""
     try: return float(json.load(open(STATE_FILE)).get("threshold", default))
     except Exception: return default
-from src.ingestion.audio_receiver import start_listening
-from src.ingestion.transcriber import AudioTranscriber
-from src.distiller.topic_extractor import TopicExtractor
-from src.scriptwriter.script_generator import ScriptGenerator
-from src.renderer.tts_engine import TTSEngine
-from src.renderer.video_composer import VideoComposer
-from src.publisher.social_uploader import SocialUploader
+
 
 async def run_pipeline_iteration():
     """
@@ -27,6 +21,11 @@ async def run_pipeline_iteration():
     In a real 24/7 system, this might be triggered by a cron job or an event bus
     whenever enough chunks are collected.
     """
+    from src.distiller.topic_extractor import TopicExtractor
+    from src.scriptwriter.script_generator import ScriptGenerator
+    from src.renderer.tts_engine import TTSEngine
+    from src.renderer.video_composer import VideoComposer
+    from src.publisher.social_uploader import SocialUploader
     print("--- Starting Pipeline Iteration ---")
 
     # 1. & 2. Ingestion & Transcription are running continuously in background (or via start_listening)
@@ -77,6 +76,7 @@ def main():
     Main entry point for Docker/background execution.
     """
     import threading
+    from src.ingestion.audio_receiver import start_listening
 
     # Start audio listener in a background thread
     listener_thread = threading.Thread(target=start_listening, daemon=True)

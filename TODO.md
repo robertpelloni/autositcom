@@ -12,3 +12,4 @@
 - [ ] Wire dashboard Run Cycle button to actual src.main.run_pipeline_iteration() subprocess (currently toast-only).
 - [ ] Wire distiller threshold slider persistence into TopicExtractor call (state file read in main.py).
 - [ ] Real diarization, real OAuth publisher, end-to-end 10s sample integration test.
+- [x] Wire Run Cycle + threshold persistence (0.2.1). Next: per-stage try/except in run_pipeline_iteration so a missing renderer dep still publishes/logs cleanly; Python 3.12 venv for full suite.
