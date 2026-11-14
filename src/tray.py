@@ -12,8 +12,22 @@ from PIL import Image, ImageDraw
 _children: list[subprocess.Popen] = []
 DASH_URL = "http://localhost:8501"
 
+def tray_health() -> dict:
+    """Stage health from data/pipeline.log (same parser as the dashboard, so
+    tray and UI can never disagree about pipeline state)."""
+    try:
+        from src.main import parse_stage_health
+        return parse_stage_health(open("data/pipeline.log", errors="ignore").read())
+    except Exception: return {}
+
+def health_color(health: dict):
+    # Red = any stage failed, grey = never ran, green = last cycle healthy.
+    if any(v == "fail" for v in health.values()): return (180, 30, 30)
+    if not health or all(v == "unknown" for v in health.values()): return (110, 110, 110)
+    return (30, 120, 30)
+
 def create_image(ok=True):
-    img = Image.new("RGB", (64, 64), (30, 120, 30) if ok else (180, 30, 30))
+    img = Image.new("RGB", (64, 64), health_color(tray_health()) if ok else (180, 30, 30))
     d = ImageDraw.Draw(img); d.rectangle((16, 16, 48, 48), fill=(255, 255, 255)); return img
 
 def _spawn(args):
@@ -31,7 +45,10 @@ def on_stop_servers(icon, item):
 def on_quit(icon, item):
     on_stop_servers(icon, item); icon.stop(); os._exit(0)  # _exit needed: pystray loop owns the main thread
 
-def _status(item): return f"Autositcom — {len(_children)} server(s) running"
+def _status(item):
+    h = tray_health()
+    stages = ", ".join(f"{k}:{v}" for k, v in h.items()) or "no cycles yet"
+    return f"Autositcom — {len(_children)} server(s) | {stages}"
 
 def run_tray():
     menu = pystray.Menu(

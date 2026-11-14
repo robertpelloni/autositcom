@@ -40,3 +40,7 @@
 ## [0.2.5] - 2026-11-13
 ### Added
 - Dashboard header stage-health badges (distiller/scriptwriter/renderer/publisher: ok/fail/skip/unknown) parsed from data/pipeline.log via pure src/main.parse_stage_health() with unit tests.
+
+## [0.2.6] - 2026-11-13
+### Added
+- Tray icon now reflects pipeline health (green healthy / red any stage failed / grey never ran) via the same src/main.parse_stage_health() as the dashboard; tray status menu line lists per-stage state.
