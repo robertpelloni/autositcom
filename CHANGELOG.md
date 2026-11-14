@@ -60,3 +60,7 @@
 ## [0.3.0] - 2026-11-13
 ### Added
 - DashboardState pydantic schema (src/config.py) validates data/dashboard_state.json on both sides: dashboard save_state() validates before writing, src.main load_dashboard_state() falls back to full defaults on any invalid value (threshold range, platform enum).
+
+## [0.3.1] - 2026-11-13
+### Added
+- Renderer emits [RENDER] TTS/compose progress lines; dashboard Renderer section shows a live TTS progress bar + recent render lines parsed from data/pipeline.log (src.main.parse_render_progress).

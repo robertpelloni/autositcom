@@ -61,10 +61,11 @@ class VideoComposer:
         Takes the script and generated audio assets, strings them together, and exports an mp4.
         """
         video_clips = []
-        for asset in audio_assets:
+        for i, asset in enumerate(audio_assets, 1):  # [RENDER]: dashboard progress
+            print(f"[RENDER] compose clip {i}/{len(audio_assets)} scene {asset.get('scene_number')}", flush=True)
             clip = self.create_line_clip(asset)
             video_clips.append(clip)
-
+        print("[RENDER] exporting final video", flush=True)
         final_video = concatenate_videoclips(video_clips)
 
         output_path = os.path.join(settings.RENDER_OUTPUT_DIR, f"{script.script_id}_final.mp4")

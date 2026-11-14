@@ -106,6 +106,11 @@ r1, r2, r3 = st.columns(3)
 r1.selectbox("TTS voice engine", ["edge-tts", "elevenlabs"], index=0, help="edge-tts is free/default. elevenlabs needs ELEVENLABS_API_KEY and is not yet wired in TTSEngine.")
 r2.selectbox("Video size", ["1080x1920 (vertical)", "1920x1080", "1080x1080"], help="VideoComposer(width, height). Vertical 1080×1920 suits TikTok/Shorts/Reels.")
 r3.toggle("Burn subtitles (SRT)", value=True, help="TTSEngine.generate_srt() timings burned into frames via moviepy. Needs ImageMagick policy fix in Docker (see DEPLOY.md).")
+from src.main import parse_render_progress
+_rp = parse_render_progress(open(LOG, errors="ignore").read() if os.path.exists(LOG) else "")
+if _rp["total"]: st.progress(_rp["done"] / _rp["total"], text=f"TTS progress {_rp['done']}/{_rp['total']} lines — live from data/pipeline.log ([RENDER] markers)")
+if _rp["lines"]: st.code("\n".join(_rp["lines"]), language="text")
+else: st.caption("No renderer activity yet — [RENDER] TTS/compose lines will stream here during a cycle.")
 
 # ── 7. PUBLISHER ────────────────────────────────────────────────────────────
 st.header("📤 Publisher", help="src/publisher/social_uploader.py: publish_all() fans out to YouTube/TikTok/X. ALL MOCK today — toggles control intent only, no live posting until OAuth lands (ROADMAP Phase 2).")

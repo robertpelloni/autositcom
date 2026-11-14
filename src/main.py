@@ -40,6 +40,17 @@ def parse_stage_health(log_text: str) -> dict:
     if current and health["distiller"] == "unknown": health.update(current)
     return health
 
+def parse_render_progress(log_text: str) -> dict:
+    """Live renderer progress from [RENDER] lines in pipeline.log.
+    Returns last render lines plus TTS done/total for a progress bar."""
+    import re
+    lines = [l for l in log_text.splitlines() if "[RENDER]" in l]
+    done = total = None
+    for l in lines:
+        m = re.search(r"TTS line (\d+)/(\d+)", l)
+        if m: done, total = int(m.group(1)), int(m.group(2))
+    return {"lines": lines[-8:], "done": done, "total": total}
+
 def load_platforms():
     """Dashboard Publisher toggles persisted as state['platforms']; None = all."""
     return load_dashboard_state().platforms or None

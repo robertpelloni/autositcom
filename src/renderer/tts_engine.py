@@ -61,9 +61,13 @@ class TTSEngine:
         Returns a list of metadata for the composer.
         """
         audio_assets = []
+        # [RENDER] progress lines: the dashboard parses these from pipeline.log
+        # to show live TTS progress (see src.main.parse_render_progress).
+        total = sum(len(s.dialogue) for s in script.scenes); done = 0
         for scene in script.scenes:
             for line_idx, line_dict in enumerate(scene.dialogue):
                 for character, text in line_dict.items():
+                    done += 1; print(f"[RENDER] TTS line {done}/{total} scene {scene.scene_number} {character}", flush=True)
                     base_filename = f"{script.script_id}_scene_{scene.scene_number}_line_{line_idx}"
                     audio_path = os.path.join(settings.RENDER_OUTPUT_DIR, f"{base_filename}.mp3")
                     srt_path = os.path.join(settings.RENDER_OUTPUT_DIR, f"{base_filename}.srt")

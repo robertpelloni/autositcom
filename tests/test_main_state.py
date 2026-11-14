@@ -1,6 +1,13 @@
 import asyncio, json
 from src.main import load_comedy_threshold, parse_stage_health, run_pipeline_iteration
 
+def test_render_progress_parses_tts_counts():
+    from src.main import parse_render_progress
+    log = "[RENDER] TTS line 1/3 scene 1 JERRY\n[RENDER] TTS line 2/3 scene 1 GEORGE\nnoise"
+    p = parse_render_progress(log)
+    assert p["done"] == 2 and p["total"] == 3 and len(p["lines"]) == 2
+    assert parse_render_progress("") == {"lines": [], "done": None, "total": None}
+
 def test_health_empty_log_is_unknown():
     assert set(parse_stage_health("").values()) == {"unknown"}
 
