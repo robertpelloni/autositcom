@@ -44,3 +44,7 @@
 ## [0.2.6] - 2026-11-13
 ### Added
 - Tray icon now reflects pipeline health (green healthy / red any stage failed / grey never ran) via the same src/main.parse_stage_health() as the dashboard; tray status menu line lists per-stage state.
+
+## [0.2.7] - 2026-11-13
+### Changed
+- DEPLOY.md rewritten: Python 3.12 requirement (3.15 native-wheel failures), .venv + scripts/run.ps1 launch, --once, tray health colors, operator state/logs, test + troubleshooting matrix.
