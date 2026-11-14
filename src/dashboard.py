@@ -44,6 +44,12 @@ c = st.columns(4)
 c[0].metric("Audio chunks queued", count(os.path.join(settings.AUDIO_INGEST_DIR, "processing"), ".wav"), help="5-min WAV segments in data/audio_ingest/processing awaiting transcription (watchdog + pydub, src/ingestion/audio_receiver.py).")
 c[1].metric("Transcript lines", lines(os.path.join(settings.TRANSCRIPT_STORAGE_DIR, "transcripts.jsonl")), help="Diarized TranscriptChunk rows in transcripts.jsonl from faster-whisper (src/ingestion/transcriber.py).")
 c[2].metric("Episodes rendered", count(settings.RENDER_OUTPUT_DIR, ".mp4"), help="Finished vertical 1080×1920 MP4s from edge-tts + moviepy (src/renderer/).")
+from src.main import parse_stage_health
+_health = parse_stage_health(open(LOG, errors="ignore").read() if os.path.exists(LOG) else "")
+_badge = {"ok": "🟢", "fail": "🔴", "skip": "⚪", "unknown": "⚫"}
+hc = st.columns(4)
+for i, stage in enumerate(["distiller", "scriptwriter", "renderer", "publisher"]):
+    hc[i].metric(f"{_badge[_health[stage]]} {stage.title()}", _health[stage], help=f"Last-cycle status parsed from data/pipeline.log ([STAGE-FAIL]/[STAGE-SKIP] markers written by src/main.py). ⚫ unknown = stage has not run yet; ▶ Run one full cycle now below to refresh.")
 keys = ["GEMINI_API_KEY", "OPENAI_API_KEY", "YOUTUBE_CLIENT_SECRET", "TIKTOK_SESSION_TOKEN"]
 c[3].metric("API keys configured", f"{sum(bool(getattr(settings,k,'')) for k in keys)}/{len(keys)}", help="Keys set in .env (masked below in Configuration). Missing Gemini key = distiller/scriptwriter cannot run live.")
 

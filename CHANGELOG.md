@@ -36,3 +36,7 @@
 ## [0.2.4] - 2026-11-13
 ### Added
 - Publisher platform filtering: SocialUploader.publish_all(platforms=...) + dashboard Publisher toggles persisted via Save button -> src/main.py load_platforms(). Default None = all platforms (existing callers unchanged).
+
+## [0.2.5] - 2026-11-13
+### Added
+- Dashboard header stage-health badges (distiller/scriptwriter/renderer/publisher: ok/fail/skip/unknown) parsed from data/pipeline.log via pure src/main.parse_stage_health() with unit tests.

@@ -14,6 +14,28 @@ def load_comedy_threshold(default: float = 7.0) -> float:
     try: return float(json.load(open(STATE_FILE)).get("threshold", default))
     except Exception: return default
 
+STAGES = ("distiller", "scriptwriter", "renderer", "publisher")
+def parse_stage_health(log_text: str) -> dict:
+    """Last-cycle health per stage from pipeline.log. WHY in main: pure and
+    unit-testable without importing Streamlit; the dashboard only renders it.
+    Values: 'ok' (cycle completed / stage passed), 'fail', 'skip', 'unknown'."""
+    health = {s: "unknown" for s in STAGES}
+    current = {}
+    for line in log_text.splitlines():
+        if "Starting Pipeline Iteration" in line: current = {}
+        elif "[STAGE-FAIL]" in line:
+            for s in STAGES:
+                if s in line: current[s] = "fail"
+        elif "[STAGE-SKIP]" in line:
+            for s in STAGES:
+                if s in line: current[s] = "skip"
+        elif "Pipeline Iteration Complete" in line:
+            health = {s: current.get(s, "ok") for s in STAGES}
+        elif "No high-value topics" in line:
+            health = {**{s: "unknown" for s in STAGES}, "distiller": "ok"}
+    if current and health["distiller"] == "unknown": health.update(current)
+    return health
+
 def load_platforms():
     """Dashboard Publisher toggles persisted as state['platforms']; None = all."""
     try:
