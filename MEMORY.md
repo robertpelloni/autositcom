@@ -12,3 +12,5 @@
 - Prefer simple, robust, and readable implementations over complex abstractions.
 - All configuration must reside in environment variables loaded into a single `Settings` object.
 - Strive for complete autonomy; error handling should recover or log and skip, never crash the main process.
+## 2026-11-13
+- Dashboard must stay single-page value-ordered; every new backend feature needs a labelled control+tooltip there before merge. Tray children must use BelowNormal priority.

@@ -12,3 +12,8 @@
 - Main orchestrator script (`src/main.py`) for continuous async execution.
 - Dockerfile and `docker-compose.yml` for containerized deployment.
 - Initial global documentation suite.
+## [0.2.0] - 2026-11-13
+### Changed
+- Dashboard consolidated to one page ordered by value (episode/health, controls, ingestion, distiller, scriptwriter/lore, renderer, publisher, config, logs); every backend feature now has a labelled control + tooltip; settings persist to data/dashboard_state.json.
+- Tray rewritten: browser-open (no duplicate Streamlit), Start Dashboard/Pipeline, Stop Servers, Quit, live status, BelowNormal children.
+- Added scripts/run.ps1 unified BelowNormal launcher.

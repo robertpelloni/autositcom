@@ -1,50 +1,47 @@
-import os
-import sys
-import threading
-import subprocess
+"""Autositcom system tray — status, dashboard, pipeline control, clean quit.
+
+WHY: operator must see health and stop servers without a terminal.
+Dashboard opens in the browser (never spawns a duplicate Streamlit);
+Quit terminates child processes it started, then exits.
+Run: python -m src.tray   (below-normal priority recommended, see scripts/run.ps1)
+"""
+import os, subprocess, sys, webbrowser
 import pystray
 from PIL import Image, ImageDraw
 
-def create_image():
-    # Create a simple icon image (a red square with a white "A" for Autositcom)
-    width = 64
-    height = 64
-    color1 = (200, 0, 0)
-    color2 = (255, 255, 255)
+_children: list[subprocess.Popen] = []
+DASH_URL = "http://localhost:8501"
 
-    image = Image.new('RGB', (width, height), color1)
-    dc = ImageDraw.Draw(image)
-    # Simple placeholder shape if text font isn't available
-    dc.rectangle(
-        (width // 4, height // 4, width * 3 // 4, height * 3 // 4),
-        fill=color2
-    )
-    return image
+def create_image(ok=True):
+    img = Image.new("RGB", (64, 64), (30, 120, 30) if ok else (180, 30, 30))
+    d = ImageDraw.Draw(img); d.rectangle((16, 16, 48, 48), fill=(255, 255, 255)); return img
 
+def _spawn(args):
+    flags = getattr(subprocess, "BELOW_NORMAL_PRIORITY_CLASS", 0)  # never hang the machine
+    p = subprocess.Popen(args, creationflags=flags); _children.append(p); return p
+
+def on_open_dashboard(icon, item): webbrowser.open(DASH_URL)  # just browse; dashboard may already run via Docker/run.ps1
+def on_start_dashboard(icon, item): _spawn([sys.executable, "-m", "streamlit", "run", "src/dashboard.py", "--server.port", "8501"])
+def on_start_pipeline(icon, item): _spawn([sys.executable, "-m", "src.main"])
+def on_stop_servers(icon, item):
+    for p in _children:
+        try: p.terminate()
+        except Exception: pass
+    _children.clear(); icon.notify("Autositcom servers stopped", "Autositcom")
 def on_quit(icon, item):
-    icon.stop()
-    # Need to properly terminate the underlying servers in a real deployment
-    print("Quitting Autositcom tray app...")
-    os._exit(0)
+    on_stop_servers(icon, item); icon.stop(); os._exit(0)  # _exit needed: pystray loop owns the main thread
 
-def on_open_dashboard(icon, item):
-    print("Opening Dashboard...")
-    # This spawns the streamlit process if it's not already running,
-    # or ideally just opens the browser to the existing localhost port.
-    # We'll do a simple subprocess call for demonstration.
-    try:
-        subprocess.Popen(["streamlit", "run", "src/dashboard.py"])
-    except Exception as e:
-        print(f"Error opening dashboard: {e}")
+def _status(item): return f"Autositcom — {len(_children)} server(s) running"
 
 def run_tray():
-    image = create_image()
     menu = pystray.Menu(
-        pystray.MenuItem('Open Dashboard', on_open_dashboard),
-        pystray.MenuItem('Quit Servers', on_quit)
+        pystray.MenuItem(_status, None, enabled=False),
+        pystray.MenuItem("Open Dashboard (browser)", on_open_dashboard, default=True),
+        pystray.MenuItem("Start Dashboard server", on_start_dashboard),
+        pystray.MenuItem("Start Pipeline", on_start_pipeline),
+        pystray.MenuItem("Stop Servers", on_stop_servers),
+        pystray.MenuItem("Quit (stop servers + exit)", on_quit),
     )
-    icon = pystray.Icon("Autositcom", image, "Autositcom Server", menu)
-    icon.run()
+    pystray.Icon("Autositcom", create_image(), "Autositcom Server", menu).run()
 
-if __name__ == "__main__":
-    run_tray()
+if __name__ == "__main__": run_tray()

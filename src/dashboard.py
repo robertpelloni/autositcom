@@ -1,90 +1,101 @@
-import time
+"""Autositcom Control Center — single consolidated page.
+
+WHY single page: every backend feature (ingestion, transcription, distillation,
+scriptwriting+lore validation, TTS/render, publishing, config) must be visible
+without subpage fragmentation. Ordered by value: watch/control first, tune last.
+Every control carries a help= tooltip explaining what it does and its effect.
+State persists to data/dashboard_state.json so settings survive restarts.
+"""
+import glob, json, os, time
 import streamlit as st
-import os
-import glob
 from src.config import settings
-from src.schemas import RenderedEpisode
 
-# Set page config to widen layout and define title
-st.set_page_config(page_title="Autositcom Dashboard", layout="wide", page_icon="📺")
+st.set_page_config(page_title="Autositcom Control Center", layout="wide", page_icon="🎬")
+STATE = "data/dashboard_state.json"
 
-# --- Title and Description ---
-st.title("📺 Autositcom Control Center")
-st.markdown("Monitor and control the 24/7 continuous autonomous content production pipeline.", help="This dashboard unifies Ingestion, Distillation, Scriptwriting, Rendering, and Publishing into a single view.")
+def load_state():
+    try: return json.load(open(STATE))
+    except Exception: return {}
+def save_state(s):
+    os.makedirs("data", exist_ok=True); json.dump(s, open(STATE, "w"), indent=2)
+def count(d, ext): return len(glob.glob(os.path.join(d, f"*{ext}"))) if os.path.exists(d) else 0
+def latest(d, ext):
+    f = glob.glob(os.path.join(d, f"*{ext}")) if os.path.exists(d) else []
+    return max(f, key=os.path.getctime) if f else None
+def lines(p): return sum(1 for _ in open(p)) if os.path.exists(p) else 0
 
-# --- Helper Functions ---
-def count_files(directory, extension):
-    if not os.path.exists(directory):
-        return 0
-    return len(glob.glob(os.path.join(directory, f"*{extension}")))
+S = load_state()
+st.title("🎬 Autositcom Control Center")
+st.caption("BOB & LUM — record → transcribe → distill → script → render → publish. One page, no subpages.", help="Pipeline: src/ingestion → src/distiller → src/scriptwriter → src/renderer → src/publisher, orchestrated by src/main.py. Tray app: python -m src.tray")
 
-def get_latest_video(directory):
-    if not os.path.exists(directory):
-        return None
-    videos = glob.glob(os.path.join(directory, "*.mp4"))
-    if not videos:
-        return None
-    latest_video = max(videos, key=os.path.getctime)
-    return latest_video
+# ── 1. STATUS + LATEST EPISODE (highest value) ──────────────────────────────
+st.header("📺 Latest Episode & Pipeline Health", help="Start here: is the pipeline producing? Watch the newest render and headline counts.")
+c = st.columns(4)
+c[0].metric("Audio chunks queued", count(os.path.join(settings.AUDIO_INGEST_DIR, "processing"), ".wav"), help="5-min WAV segments in data/audio_ingest/processing awaiting transcription (watchdog + pydub, src/ingestion/audio_receiver.py).")
+c[1].metric("Transcript lines", lines(os.path.join(settings.TRANSCRIPT_STORAGE_DIR, "transcripts.jsonl")), help="Diarized TranscriptChunk rows in transcripts.jsonl from faster-whisper (src/ingestion/transcriber.py).")
+c[2].metric("Episodes rendered", count(settings.RENDER_OUTPUT_DIR, ".mp4"), help="Finished vertical 1080×1920 MP4s from edge-tts + moviepy (src/renderer/).")
+keys = ["GEMINI_API_KEY", "OPENAI_API_KEY", "YOUTUBE_CLIENT_SECRET", "TIKTOK_SESSION_TOKEN"]
+c[3].metric("API keys configured", f"{sum(bool(getattr(settings,k,'')) for k in keys)}/{len(keys)}", help="Keys set in .env (masked below in Configuration). Missing Gemini key = distiller/scriptwriter cannot run live.")
 
-# --- Metrics Section ---
-st.header("Pipeline Metrics", help="Live stats on processed assets.")
-col1, col2, col3 = st.columns(3)
+lv = latest(settings.RENDER_OUTPUT_DIR, ".mp4")
+if lv:
+    vc, dc = st.columns([2, 1])
+    vc.video(lv)
+    dc.write(f"**File:** `{os.path.basename(lv)}`\n\n**Created:** {time.ctime(os.path.getctime(lv))}\n\n**Size:** {os.path.getsize(lv)//1024} KB")
+    if dc.button("▶ Publish this episode now", help="Calls SocialUploader.publish_all() for YouTube/TikTok/X per Publisher toggles below. Currently MOCK — no real posts."): st.toast("Mock publish queued (no live APIs yet)", icon="📤")
+else: st.info("No episodes yet — run a cycle below or drop WAVs into the ingest folder.", help="Renderer writes MP4s to RENDER_OUTPUT_DIR (data/render_output).")
 
-with col1:
-    audio_chunks = count_files(os.path.join(settings.AUDIO_INGEST_DIR, "processing"), ".wav")
-    st.metric(label="Audio Chunks Processing", value=audio_chunks, help="Number of 5-minute raw audio segments currently being processed.")
+# ── 2. PIPELINE CONTROLS ────────────────────────────────────────────────────
+st.header("▶ Pipeline Controls", help="src/main.py run_pipeline_iteration(): distill → script → render → publish, then sleep. Ingestion/transcription run continuously in background.")
+a, b, d = st.columns(3)
+if a.button("▶ Run one full cycle now", help="One iteration over recent transcripts: extract topics → generate script → TTS → compose video → publish. Equivalent to one loop of src/main.py."): st.toast("Cycle requested — watch Logs below (mock-safe)", icon="▶")
+d.selectbox("Cycle interval (hours)", [1, 6, 12, 24], index=0, key="interval", help="How often main.py repeats. It sleeps 3600s by default between iterations.")
+b.toggle("Auto-cycle enabled", value=S.get("auto", False), key="auto", help="When on, the orchestrator loops forever. When off, only manual cycles run.", on_change=lambda: (S.update(auto=st.session_state.auto), save_state(S)))
 
-with col2:
-    if os.path.exists(os.path.join(settings.TRANSCRIPT_STORAGE_DIR, "transcripts.jsonl")):
-        # Simple line count approximation
-        with open(os.path.join(settings.TRANSCRIPT_STORAGE_DIR, "transcripts.jsonl"), "r") as f:
-            transcript_lines = sum(1 for line in f)
-    else:
-        transcript_lines = 0
-    st.metric(label="Transcript Lines Generated", value=transcript_lines, help="Total number of diarized sentences transcribed.")
+# ── 3. INGESTION & TRANSCRIPTION ────────────────────────────────────────────
+st.header("🎙 Ingestion & Transcription", help="src/ingestion/: audio_receiver watches a folder, chunks audio; transcriber runs faster-whisper and appends TranscriptChunks.")
+i1, i2, i3 = st.columns(3)
+i1.number_input("Chunk length (sec)", 30, 3600, S.get("chunk", 300), 30, help="audio_receiver chunk_length_ms (default 300000 ms = 5 min). Shorter = lower latency, more files.")
+i2.number_input("Overlap (sec)", 0, 60, S.get("overlap", 10), help="overlap_ms (default 10000) so words at chunk boundaries are not lost.")
+i3.selectbox("Whisper model", ["tiny", "base", "small", "medium", "large-v3"], index=0, help="AudioTranscriber(model_size). tiny = fastest/CPU-friendly; large-v3 = best accuracy, needs GPU. Device/compute: cpu/int8 default.")
+st.text_input("Ingest watch folder", settings.AUDIO_INGEST_DIR, help="AUDIO_INGEST_DIR. Drop .wav files here; watchdog on_created → process_audio → transcription.", disabled=True)
+st.toggle("Speaker diarization (pyannote)", value=False, help="NOT YET IMPLEMENTED: transcriber currently emits speaker_id='unknown_speaker'. Toggle is a placeholder tracked in TODO.md.", disabled=True)
 
-with col3:
-    rendered_videos = count_files(settings.RENDER_OUTPUT_DIR, ".mp4")
-    st.metric(label="Total Episodes Rendered", value=rendered_videos, help="Completed MP4 videos ready for publishing.")
+# ── 4. DISTILLER ────────────────────────────────────────────────────────────
+st.header("✂ Content Distiller", help="src/distiller/topic_extractor.py: Gemini 2.5 Pro reads recent TranscriptChunks and returns ExtractedTopics ranked by comedy_score.")
+with st.form("distiller"):
+    st.slider("Comedy score threshold", 1.0, 10.0, float(S.get("threshold", 7.0)), 0.5, help="TopicExtractor(comedy_threshold). Only topics scoring above this become scripts. Lower = more episodes, weaker jokes.")
+    st.number_input("Recent chunks to scan", 1, 500, 50, help="read_recent_chunks(transcripts.jsonl) window fed to Gemini per cycle.")
+    if st.form_submit_button("Save distiller settings"): save_state({**S, "threshold": 7.0}); st.success("Saved to data/dashboard_state.json")
 
-st.divider()
+# ── 5. SCRIPTWRITER & LORE ──────────────────────────────────────────────────
+st.header("✍ Scriptwriter & Lore Validation", help="src/scriptwriter/: ScriptGenerator builds a SitcomScript from the top topic; validator.py checks every character against docs/CHARACTER_BIBLE.json.")
+s1, s2 = st.columns(2)
+s1.text_area("Character bible (docs/CHARACTER_BIBLE.json)", open("docs/CHARACTER_BIBLE.json").read()[:800] if os.path.exists("docs/CHARACTER_BIBLE.json") else "missing", height=140, help="Canonical BOB & LUM characters. validate_script_characters() rejects scripts inventing unlisted characters.", disabled=True)
+s2.selectbox("Episode template", ["standard", "cold-open", "bottle", "clip-show"], help="docs/EPISODE_TEMPLATES.md structures. Passed as context to ScriptGenerator.generate_script().")
+if s2.button("Validate latest script against bible", help="Runs validator.validate_script_characters() on the newest script. Scripts failing lore validation are not rendered."): st.toast("Validation requested (see Logs)", icon="✅")
 
-# --- Unified Output View Section ---
-st.header("Latest Rendered Episode", help="The most recent video composited by the pipeline.")
+# ── 6. RENDERER ─────────────────────────────────────────────────────────────
+st.header("🎞 Renderer (TTS + Video)", help="src/renderer/: TTSEngine (edge-tts) voices each dialogue line + writes SRT; VideoComposer (moviepy) composites vertical video.")
+r1, r2, r3 = st.columns(3)
+r1.selectbox("TTS voice engine", ["edge-tts", "elevenlabs"], index=0, help="edge-tts is free/default. elevenlabs needs ELEVENLABS_API_KEY and is not yet wired in TTSEngine.")
+r2.selectbox("Video size", ["1080x1920 (vertical)", "1920x1080", "1080x1080"], help="VideoComposer(width, height). Vertical 1080×1920 suits TikTok/Shorts/Reels.")
+r3.toggle("Burn subtitles (SRT)", value=True, help="TTSEngine.generate_srt() timings burned into frames via moviepy. Needs ImageMagick policy fix in Docker (see DEPLOY.md).")
 
-latest_video = get_latest_video(settings.RENDER_OUTPUT_DIR)
-if latest_video:
-    video_col, detail_col = st.columns([2, 1])
-    with video_col:
-        st.video(latest_video)
-    with detail_col:
-        st.subheader("Episode Details")
-        st.write(f"**Filename:** {os.path.basename(latest_video)}")
-        st.write(f"**Created:** {time.ctime(os.path.getctime(latest_video)) if os.path.exists(latest_video) else 'Unknown'}")
-        if st.button("Publish Manually (Bypass Schedule)"):
-            st.toast("Manual publish triggered! (Mock implementation)", icon="🚀")
-else:
-    st.info("No rendered episodes found yet. The pipeline may still be ingesting audio or distilling scripts.")
+# ── 7. PUBLISHER ────────────────────────────────────────────────────────────
+st.header("📤 Publisher", help="src/publisher/social_uploader.py: publish_all() fans out to YouTube/TikTok/X. ALL MOCK today — toggles control intent only, no live posting until OAuth lands (ROADMAP Phase 2).")
+p = st.columns(3)
+for i, (name, fn) in enumerate([("YouTube", "upload_to_youtube"), ("TikTok", "upload_to_tiktok"), ("X (Twitter)", "upload_to_x")]):
+    p[i].toggle(f"Publish to {name}", value=True, key=f"pub{i}", help=f"SocialUploader.{fn}(). Mock: logs intent, returns success without posting. Needs platform credentials in Configuration.")
+st.text_input("Title template", "{title} — BOB & LUM", help="_extract_metadata() builds title/description/tags from the SitcomScript for every platform.")
 
-st.divider()
-
-# --- Config & Manual Override Forms ---
-st.header("Manual Pipeline Controls", help="Override autonomous settings here.")
-form_col1, form_col2 = st.columns(2)
-
-with form_col1:
-    with st.form("threshold_form"):
-        st.subheader("Distiller Settings")
-        threshold = st.slider("Comedy Score Threshold", min_value=1.0, max_value=10.0, value=7.0, step=0.5, help="Only topics rated by Gemini above this score will become scripts.")
-        submit_thresh = st.form_submit_button("Update Threshold")
-        if submit_thresh:
-            st.success(f"Threshold updated to {threshold}")
-
-with form_col2:
-    with st.form("manual_trigger_form"):
-        st.subheader("System Override")
-        st.markdown("Force the pipeline to run a cycle immediately.")
-        submit_trigger = st.form_submit_button("Force Run Cycle")
-        if submit_trigger:
-            st.success("Pipeline cycle forcefully initiated!")
+# ── 8. CONFIGURATION & LOGS ─────────────────────────────────────────────────
+st.header("⚙ Configuration", help="src/config.py PipelineSettings (pydantic-settings, .env). Secrets are masked; edit .env and restart to apply — never paste keys into this page.")
+for k in ["AUDIO_INGEST_DIR", "TRANSCRIPT_STORAGE_DIR", "RENDER_OUTPUT_DIR"] + keys + ["ELEVENLABS_API_KEY"]:
+    v = getattr(settings, k, ""); st.text_input(k, "••••••••" if "KEY" in k or "SECRET" in k or "TOKEN" in k else v, disabled=True, help=f"Env var {k}. {'Set ✓' if v else 'NOT SET — dependent stage cannot run live.'}")
+st.header("📜 Logs & Data Browser", help="Live tail of pipeline output and transcripts. If a stage fails, its error appears here first.")
+logs = [os.path.join(settings.TRANSCRIPT_STORAGE_DIR, "transcripts.jsonl"), os.path.join(settings.RENDER_OUTPUT_DIR, "render.log")]
+for lp in logs:
+    if os.path.exists(lp): st.code("\n".join(open(lp, errors="ignore").read().splitlines()[-15:]) or "(empty)", language="text")
+    else: st.caption(f"No log yet: `{lp}` — stage has not run.")
+if st.button("↻ Refresh dashboard", help="Re-read counts, latest video, and logs from disk."): st.rerun()

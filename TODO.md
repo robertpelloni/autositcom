@@ -6,3 +6,9 @@
 - [ ] Add real-time log tailing to the Streamlit UI dashboard.
 - [ ] Implement actual speaker diarization in `src/ingestion/transcriber.py` instead of the "unknown_speaker" mock.
 - [ ] Write integration tests that run the entire pipeline end-to-end on a small 10-second sample audio file.
+## Done 2026-11-13 (0.2.0)
+- [x] Consolidated dashboard to single page, all subsystems represented with tooltips/forms; tray fixed (browser-open, stop/quit, status).
+## Next
+- [ ] Wire dashboard Run Cycle button to actual src.main.run_pipeline_iteration() subprocess (currently toast-only).
+- [ ] Wire distiller threshold slider persistence into TopicExtractor call (state file read in main.py).
+- [ ] Real diarization, real OAuth publisher, end-to-end 10s sample integration test.
