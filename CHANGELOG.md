@@ -72,3 +72,7 @@
 ## [0.3.3] - 2026-11-13
 ### Fixed
 - Full test suite green (32/32) on the newly created Python 3.12 .venv312 - ingestion and renderer suites now run; scripts/run.ps1 prefers .venv312. Noted ambient GEMINI/OPENAI/ELEVENLABS keys present (no .env file).
+
+## [0.3.4] - 2026-11-13
+### Changed
+- Character bible corrected from Seinfeld placeholders to the real cast BOB (Robert Pelloni) and LUM (Lumbros Kourlos); descriptions marked DRAFT pending the canonical screenplay text. Voice/color maps and all test fixtures updated to match.

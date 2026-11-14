@@ -9,14 +9,14 @@ def test_character_validator():
     scene1 = ScriptScene(
         scene_number=1,
         setting="Living Room",
-        dialogue=[{"JERRY": "Hello"}, {"GEORGE": "Hi"}],
+        dialogue=[{"BOB": "Hello"}, {"LUM": "Hi"}],
         visual_action_notes="Walks in"
     )
     script_valid = SitcomScript(
         script_id="script_1",
         title="Episode 1",
         theme="Friendship",
-        characters=["JERRY", "GEORGE"],
+        characters=["BOB", "LUM"],
         scenes=[scene1]
     )
 
@@ -35,7 +35,7 @@ def test_character_validator():
         scenes=[scene2]
     )
 
-    # Assuming docs/CHARACTER_BIBLE.json exists and contains JERRY and GEORGE
+    # Assuming docs/CHARACTER_BIBLE.json exists and contains BOB and LUM
     assert validate_script_characters(script_valid) == True
     assert validate_script_characters(script_invalid) == False
 
@@ -49,15 +49,15 @@ def test_script_generation(mock_genai_client):
         "script_id": "test_script",
         "title": "The Test Episode",
         "theme": "Testing",
-        "characters": ["JERRY", "ELAINE"],
+        "characters": ["BOB", "LUM"],
         "scenes": [
             {
                 "scene_number": 1,
                 "setting": "Coffee Shop",
                 "visual_action_notes": "Drinking coffee",
                 "dialogue": [
-                    {"JERRY": "Did you run the tests?"},
-                    {"ELAINE": "Of course I did."}
+                    {"BOB": "Did you run the tests?"},
+                    {"LUM": "Of course I did."}
                 ]
             }
         ]
@@ -80,5 +80,5 @@ def test_script_generation(mock_genai_client):
     assert script is not None
     assert script.title == "The Test Episode"
     assert len(script.characters) == 2
-    assert "JERRY" in script.characters
+    assert "BOB" in script.characters
     assert script.scenes[0].setting == "Coffee Shop"

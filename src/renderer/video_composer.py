@@ -12,10 +12,8 @@ class VideoComposer:
 
         # Color palette mapping for characters
         self.char_colors = {
-            "JERRY": (0, 0, 255),    # Blue
-            "GEORGE": (255, 0, 0),   # Red
-            "ELAINE": (0, 255, 0),   # Green
-            "KRAMER": (255, 165, 0)  # Orange
+            "BOB": (0, 0, 255),    # Blue
+            "LUM": (255, 0, 0)     # Red
         }
 
     def create_line_clip(self, audio_asset: Dict) -> CompositeVideoClip:

@@ -8,7 +8,7 @@ def mock_script():
         script_id="test_ep_1",
         title="Episode 1",
         theme="Testing",
-        characters=["JERRY", "GEORGE"],
+        characters=["BOB", "LUM"],
         scenes=[]
     )
 
@@ -27,7 +27,7 @@ def test_metadata_extraction(mock_script):
 
     assert metadata["title"] == "Autositcom: Episode 1 (Shorts)"
     assert "Testing" in metadata["description"]
-    assert "JERRY" in metadata["description"]
+    assert "BOB" in metadata["description"]
     assert "Testing" in metadata["tags"]
     assert "sitcom" in metadata["tags"]
 
@@ -72,3 +72,4 @@ def test_publish_all_platform_filter(mock_script, mock_episode, monkeypatch, cap
     uploader.publish_all(mock_script, mock_episode, platforms={"youtube"})
     out = capsys.readouterr().out
     assert "YouTube upload simulated" in out and "TikTok" not in out and "X upload" not in out
+

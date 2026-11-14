@@ -10,8 +10,8 @@ def mock_script():
         scene_number=1,
         setting="Living Room",
         dialogue=[
-            {"JERRY": "Test line one."},
-            {"GEORGE": "Test line two."}
+            {"BOB": "Test line one."},
+            {"LUM": "Test line two."}
         ],
         visual_action_notes="Walks in"
     )
@@ -19,7 +19,7 @@ def mock_script():
         script_id="test_ep_1",
         title="Episode 1",
         theme="Testing",
-        characters=["JERRY", "GEORGE"],
+        characters=["BOB", "LUM"],
         scenes=[scene]
     )
 
@@ -53,14 +53,14 @@ def test_video_composer(mock_concat, mock_composite_clip_class, mock_text_clip, 
     audio_assets = [
         {
             "scene_number": 1,
-            "character": "JERRY",
+            "character": "BOB",
             "audio_path": "fake1.mp3",
             "srt_path": "fake1.srt",
             "text": "Test line one."
         },
         {
             "scene_number": 1,
-            "character": "GEORGE",
+            "character": "LUM",
             "audio_path": "fake2.mp3",
             "srt_path": "fake2.srt",
             "text": "Test line two."

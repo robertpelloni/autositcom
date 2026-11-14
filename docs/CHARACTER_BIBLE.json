@@ -1,16 +1,10 @@
 {
     "characters": {
-        "JERRY": {
-            "description": "Neurotic, observational, always analyzing minor social infractions."
+        "BOB": {
+            "description": "Robert 'Bob' Pelloni, co-lead of BOB & LUM. DRAFT — replace with the canonical description from the screenplay at robertpelloni.com/script before live generation."
         },
-        "GEORGE": {
-            "description": "Cheap, petty, constantly scheming to avoid work or responsibility."
-        },
-        "ELAINE": {
-            "description": "Assertive, superficial, gets easily annoyed by quirky habits."
-        },
-        "KRAMER": {
-            "description": "Eccentric, bursts into rooms, comes up with bizarre business ideas."
+        "LUM": {
+            "description": "Lumbros 'Lum' Kourlos, co-lead of BOB & LUM. DRAFT — replace with the canonical description from the screenplay at robertpelloni.com/script before live generation."
         }
     }
 }

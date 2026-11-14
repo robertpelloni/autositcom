@@ -32,11 +32,11 @@ def test_full_cycle_from_sample_transcripts(tmp_path, capsys, monkeypatch):
     assert chunks["ID"] == "chunk_1"  # fixture really on disk and parseable
 
     topic = ExtractedTopic(topic_id="t1", title="Vending Machine Millions",
-        summary="JERRY invests his paycheck in vending machines.", key_quotes=["Mostly in quarters."],
+        summary="BOB invests his paycheck in vending machines.", key_quotes=["Mostly in quarters."],
         comedy_score=9.0, source_chunk_ids=["chunk_1", "chunk_3"])
     script = SitcomScript(script_id="s1", title="The Vending Machine", theme="Bad investments",
-        characters=["JERRY", "GEORGE"], scenes=[ScriptScene(scene_number=1, setting="Apartment",
-        dialogue=[{"JERRY": "Mostly in quarters."}], visual_action_notes="Coins everywhere")])
+        characters=["BOB", "LUM"], scenes=[ScriptScene(scene_number=1, setting="Apartment",
+        dialogue=[{"BOB": "Mostly in quarters."}], visual_action_notes="Coins everywhere")])
     episode = RenderedEpisode(episode_id="e1", video_path=str(tmp_path / "ep.mp4"),
         duration_seconds=10.0, thumbnail_path=str(tmp_path / "thumb.jpg"))
 
@@ -57,3 +57,4 @@ def test_full_cycle_from_sample_transcripts(tmp_path, capsys, monkeypatch):
     Pub.return_value.publish_all.assert_called_once_with(script, episode, platforms=None)
     out = capsys.readouterr().out
     assert "Pipeline Iteration Complete" in out and "STAGE-FAIL" not in out
+

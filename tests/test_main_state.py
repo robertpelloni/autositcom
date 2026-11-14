@@ -3,7 +3,7 @@ from src.main import load_comedy_threshold, parse_stage_health, run_pipeline_ite
 
 def test_render_progress_parses_tts_counts():
     from src.main import parse_render_progress
-    log = "[RENDER] TTS line 1/3 scene 1 JERRY\n[RENDER] TTS line 2/3 scene 1 GEORGE\nnoise"
+    log = "[RENDER] TTS line 1/3 scene 1 BOB\n[RENDER] TTS line 2/3 scene 1 LUM\nnoise"
     p = parse_render_progress(log)
     assert p["done"] == 2 and p["total"] == 3 and len(p["lines"]) == 2
     assert parse_render_progress("") == {"lines": [], "done": None, "total": None}
@@ -49,3 +49,4 @@ def test_threshold_falls_back_on_bad_json(tmp_path, monkeypatch):
     (tmp_path / "data").mkdir()
     (tmp_path / "data" / "dashboard_state.json").write_text("not json")
     assert load_comedy_threshold() == 7.0
+

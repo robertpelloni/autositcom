@@ -9,10 +9,8 @@ class TTSEngine:
     def __init__(self):
         # We can map specific characters to specific voices
         self.voice_map: Dict[str, str] = {
-            "JERRY": "en-US-GuyNeural",
-            "GEORGE": "en-US-ChristopherNeural",
-            "ELAINE": "en-US-AriaNeural",
-            "KRAMER": "en-US-EricNeural"
+            "BOB": "en-US-GuyNeural",
+            "LUM": "en-US-ChristopherNeural"
         }
         self.default_voice = "en-US-GuyNeural"
         os.makedirs(settings.RENDER_OUTPUT_DIR, exist_ok=True)
