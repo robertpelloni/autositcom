@@ -56,3 +56,7 @@
 ## [0.2.9] - 2026-11-13
 ### Added
 - Tray 'Run Cycle Now' menu action: spawns src.main --once (BelowNormal, data/pipeline.log), notifies on start/finish, loudly notifies failed stages, and refreshes the health-colored icon.
+
+## [0.3.0] - 2026-11-13
+### Added
+- DashboardState pydantic schema (src/config.py) validates data/dashboard_state.json on both sides: dashboard save_state() validates before writing, src.main load_dashboard_state() falls back to full defaults on any invalid value (threshold range, platform enum).

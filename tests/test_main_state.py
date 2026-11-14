@@ -30,6 +30,13 @@ def test_threshold_reads_dashboard_state(tmp_path, monkeypatch):
     (tmp_path / "data" / "dashboard_state.json").write_text(json.dumps({"threshold": 8.5}))
     assert load_comedy_threshold() == 8.5
 
+def test_state_validation_falls_back(tmp_path, monkeypatch):
+    from src.main import load_dashboard_state, load_platforms
+    monkeypatch.chdir(tmp_path); (tmp_path / "data").mkdir()
+    (tmp_path / "data" / "dashboard_state.json").write_text('{"threshold": 99, "platforms": ["myspace"]}')
+    s = load_dashboard_state()  # out-of-range + bad enum -> full defaults, no crash
+    assert s.threshold == 7.0 and load_platforms() is None
+
 def test_threshold_falls_back_on_bad_json(tmp_path, monkeypatch):
     monkeypatch.chdir(tmp_path)
     (tmp_path / "data").mkdir()
