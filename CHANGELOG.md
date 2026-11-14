@@ -64,3 +64,7 @@
 ## [0.3.1] - 2026-11-13
 ### Added
 - Renderer emits [RENDER] TTS/compose progress lines; dashboard Renderer section shows a live TTS progress bar + recent render lines parsed from data/pipeline.log (src.main.parse_render_progress).
+
+## [0.3.2] - 2026-11-13
+### Changed
+- HANDOFF.md rewritten as a complete resume document (verified state, blockers needing a human, operating loop, ordered next steps); ROADMAP progress appended.

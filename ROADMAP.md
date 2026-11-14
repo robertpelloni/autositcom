@@ -17,3 +17,6 @@
 - Transition to a microservice architecture communicating via Redis or RabbitMQ for infinite horizontal scaling.
 ## Phase 1.5: Consolidated Ops (0.2.0, 2026-11-13)
 - Single-page value-ordered dashboard + fixed tray + scripts/run.ps1 BelowNormal launcher. Next: wire controls to live pipeline, real publisher OAuth.
+
+## Progress 2026-11-13 (0.2.0-0.3.2)
+- Done: consolidated dashboard, wired controls (cycle/threshold/platforms), per-stage guards, health badges (dashboard+tray), E2E test, validated state schema, renderer progress, DEPLOY/README/VISION sync. Remaining Phase 2 blockers unchanged: real OAuth, diarization, real BOB & LUM bible, first live episode (needs GEMINI_API_KEY).
