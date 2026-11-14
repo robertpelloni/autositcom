@@ -8,11 +8,15 @@ from src.config import settings
 
 STATE_FILE = "data/dashboard_state.json"
 
+def load_dashboard_state():
+    """Validated dashboard state; ANY error (missing/corrupt/out-of-range)
+    falls back to defaults so a bad UI write can never break the loop."""
+    from src.config import DashboardState
+    try: return DashboardState(**json.load(open(STATE_FILE)))
+    except Exception: return DashboardState()
+
 def load_comedy_threshold(default: float = 7.0) -> float:
-    """Threshold set in the dashboard (data/dashboard_state.json); WHY: operator
-    tuning in the UI must reach the pipeline without editing code or env."""
-    try: return float(json.load(open(STATE_FILE)).get("threshold", default))
-    except Exception: return default
+    return load_dashboard_state().threshold
 
 STAGES = ("distiller", "scriptwriter", "renderer", "publisher")
 def parse_stage_health(log_text: str) -> dict:
@@ -38,10 +42,7 @@ def parse_stage_health(log_text: str) -> dict:
 
 def load_platforms():
     """Dashboard Publisher toggles persisted as state['platforms']; None = all."""
-    try:
-        p = json.load(open(STATE_FILE)).get("platforms")
-        return p if p else None
-    except Exception: return None
+    return load_dashboard_state().platforms or None
 
 
 async def run_pipeline_iteration():

@@ -27,6 +27,10 @@ def load_state():
     try: return json.load(open(STATE))
     except Exception: return {}
 def save_state(s):
+    # Validate before writing so the dashboard can never persist state the
+    # pipeline would reject: DashboardState enforces threshold range/enums.
+    from src.config import DashboardState
+    DashboardState(**s)
     os.makedirs("data", exist_ok=True); json.dump(s, open(STATE, "w"), indent=2)
 def count(d, ext): return len(glob.glob(os.path.join(d, f"*{ext}"))) if os.path.exists(d) else 0
 def latest(d, ext):
