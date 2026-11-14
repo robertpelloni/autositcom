@@ -24,3 +24,7 @@
 - src/main.py: load_comedy_threshold() reads dashboard state; lazy stage imports so missing native deps (pyaudioop/av/edge-tts on Python 3.15) fail one stage, not startup.
 ### Fixed
 - Distiller form saved hardcoded 7.0 regardless of slider; test_config isolated from ambient API-key env vars.
+
+## [0.2.2] - 2026-11-13
+### Changed
+- run_pipeline_iteration: per-stage try/except - [STAGE-FAIL] distiller/scriptwriter/renderer/publisher logged, dependents [STAGE-SKIP], cycle always returns cleanly (verified: --once exits 0 on empty input).

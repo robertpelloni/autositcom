@@ -21,54 +21,43 @@ async def run_pipeline_iteration():
     In a real 24/7 system, this might be triggered by a cron job or an event bus
     whenever enough chunks are collected.
     """
-    from src.distiller.topic_extractor import TopicExtractor
-    from src.scriptwriter.script_generator import ScriptGenerator
-    from src.renderer.tts_engine import TTSEngine
-    from src.renderer.video_composer import VideoComposer
-    from src.publisher.social_uploader import SocialUploader
     print("--- Starting Pipeline Iteration ---")
-
-    # 1. & 2. Ingestion & Transcription are running continuously in background (or via start_listening)
-    # We assume transcripts.jsonl is being populated.
+    # WHY per-stage guards: one missing native dep or API key must degrade to a
+    # logged skip, never kill the 24/7 loop. Dependents log [STAGE-SKIP].
+    def fail(stage, e): print(f"[STAGE-FAIL] {stage}: {type(e).__name__}: {e}")
     transcripts_file = os.path.join(settings.TRANSCRIPT_STORAGE_DIR, "transcripts.jsonl")
 
-    # 3. Topic Analysis & Distillation
-    extractor = TopicExtractor(comedy_threshold=load_comedy_threshold())
-    chunks = extractor.read_recent_chunks(transcripts_file)
-    topics = extractor.extract_topics(chunks)
-
-    if not topics:
-        print("No high-value topics found this iteration.")
-        return
-
+    # 3. Topic Analysis & Distillation (1&2 ingestion/transcription run continuously)
+    try:
+        from src.distiller.topic_extractor import TopicExtractor
+        extractor = TopicExtractor(comedy_threshold=load_comedy_threshold())
+        topics = extractor.extract_topics(extractor.read_recent_chunks(transcripts_file))
+    except Exception as e: fail("distiller", e); return
+    if not topics: print("No high-value topics found this iteration."); return
     print(f"Extracted {len(topics)} viable topics.")
-
-    # We'll just process the top topic for this iteration
     top_topic = sorted(topics, key=lambda x: x.comedy_score, reverse=True)[0]
 
     # 4. Script & Lore Generation
-    generator = ScriptGenerator()
-    script = generator.generate_script(top_topic)
-
-    if not script:
-        print("Script generation failed.")
-        return
-
+    try:
+        from src.scriptwriter.script_generator import ScriptGenerator
+        script = ScriptGenerator().generate_script(top_topic)
+    except Exception as e: fail("scriptwriter", e); return
+    if not script: print("Script generation failed."); return
     print(f"Script Generated: {script.title}")
 
     # 5. Audio/Visual Render Engine
-    tts = TTSEngine()
-    audio_assets = await tts.generate_scene_audio(script)
-
-    composer = VideoComposer()
-    episode = composer.compose_episode(script, audio_assets)
-
+    try:
+        from src.renderer.tts_engine import TTSEngine
+        from src.renderer.video_composer import VideoComposer
+        episode = VideoComposer().compose_episode(script, await TTSEngine().generate_scene_audio(script))
+    except Exception as e: fail("renderer", e); print("[STAGE-SKIP] publisher: no rendered episode"); return
     print(f"Video Rendered: {episode.video_path} (Duration: {episode.duration_seconds}s)")
 
     # 6. Multi-Platform Publisher
-    uploader = SocialUploader()
-    uploader.publish_all(script, episode)
-
+    try:
+        from src.publisher.social_uploader import SocialUploader
+        SocialUploader().publish_all(script, episode)
+    except Exception as e: fail("publisher", e); return
     print("--- Pipeline Iteration Complete ---")
 
 def main():

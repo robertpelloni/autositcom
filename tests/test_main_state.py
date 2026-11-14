@@ -1,5 +1,10 @@
-import json
-from src.main import load_comedy_threshold
+import asyncio, json
+from src.main import load_comedy_threshold, run_pipeline_iteration
+
+def test_iteration_survives_empty_input(tmp_path, monkeypatch):
+    # No transcripts anywhere: cycle must log and return, never raise (24/7 loop).
+    monkeypatch.chdir(tmp_path)
+    assert asyncio.run(run_pipeline_iteration()) is None
 
 def test_threshold_default_when_no_state(tmp_path, monkeypatch):
     monkeypatch.chdir(tmp_path)
