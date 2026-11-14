@@ -31,3 +31,18 @@ def test_bible_save_valid_and_invalid(tmp_path):
     finally:
         open(BIBLE, "w").write(original)
 
+def test_dashboard_renders_with_episode_present():
+    # WHY: the st.info crash hid in the no-episode branch; the episode-present
+    # branch (st.video + publish button) must also render without exception.
+    import os
+    from src.config import settings
+    os.makedirs(settings.RENDER_OUTPUT_DIR, exist_ok=True)
+    dummy = os.path.join(settings.RENDER_OUTPUT_DIR, "apptest_dummy.mp4")
+    try:
+        with open(dummy, "wb") as f: f.write(b"\x00" * 1024)
+        at = AppTest.from_file(str(__import__("pathlib").Path(__file__).parent.parent / "src" / "dashboard.py"), default_timeout=30).run()
+        assert not at.exception
+        assert any("Publish this episode" in b.label for b in at.button)
+    finally:
+        if os.path.exists(dummy): os.remove(dummy)
+

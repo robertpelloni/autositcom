@@ -84,3 +84,7 @@
 ## [0.3.6] - 2026-11-14
 ### Fixed
 - CRITICAL dashboard crash found by headless-browser verification: st.info(help=...) raised TypeError in Streamlit 1.67, halting the page at Latest Episode - every section below (controls, distiller, bible editor, renderer, publisher, logs) never rendered. Fixed; added AppTest regression test (tests/test_dashboard_bible.py) asserting the full page renders with no exception, valid bible JSON saves with confirmation, and invalid JSON errors without touching the file.
+
+## [0.3.7] - 2026-11-14
+### Added
+- AppTest coverage for the episode-present dashboard branch (st.video + Publish button render without exception), closing the branch-coverage gap that hid the 0.3.6 crash.
