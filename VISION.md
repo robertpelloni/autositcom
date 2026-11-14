@@ -14,3 +14,5 @@ To create a fully autonomous, 24/7 continuous TV show generator that transforms 
 - All pipeline stages must be completely transparent via a single, intuitive Dashboard UI.
 - High-value interactions (viewing generated scripts, observing render progress) must be prominently displayed.
 - The UI must combine parallel concepts on a single page to eliminate subpage navigation.
+## Current Reality (0.2.x, 2026-11-13)
+The single-page dashboard now exists and is the transparency surface this vision requires: latest episode and stage-health badges first, every subsystem controllable below, no subpages. Autonomy is real but bounded - distillation/scriptwriting need a Gemini key, rendering needs Python 3.12/Docker, and publishing is still a mock. The gap between this vision and production is exactly: real BOB & LUM character bible (the committed one is placeholder), live platform OAuth, speaker diarization, and a first verified live episode.

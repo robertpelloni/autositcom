@@ -48,3 +48,7 @@
 ## [0.2.7] - 2026-11-13
 ### Changed
 - DEPLOY.md rewritten: Python 3.12 requirement (3.15 native-wheel failures), .venv + scripts/run.ps1 launch, --once, tray health colors, operator state/logs, test + troubleshooting matrix.
+
+## [0.2.8] - 2026-11-13
+### Changed
+- README/VISION/IDEAS synced with 0.2.x reality (consolidated dashboard, health badges, tray colors, E2E-tested orchestration; live-episode blockers stated plainly).
