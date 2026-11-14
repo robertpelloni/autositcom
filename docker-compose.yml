@@ -13,3 +13,20 @@ services:
     environment:
       - PYTHONUNBUFFERED=1
     command: python -m src.main
+
+  # Dashboard: the single consolidated control page (src/dashboard.py).
+  # Shares ./data with the pipeline so state/logs/episodes stay in sync.
+  autositcom-dashboard:
+    build: .
+    container_name: autositcom_dashboard
+    restart: unless-stopped
+    ports:
+      - "8501:8501"
+    volumes:
+      - ./data:/app/data
+      - ./docs:/app/docs
+    env_file:
+      - .env
+    environment:
+      - PYTHONUNBUFFERED=1
+    command: streamlit run src/dashboard.py --server.port 8501 --server.address 0.0.0.0
