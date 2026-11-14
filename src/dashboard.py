@@ -6,9 +6,19 @@ without subpage fragmentation. Ordered by value: watch/control first, tune last.
 Every control carries a help= tooltip explaining what it does and its effect.
 State persists to data/dashboard_state.json so settings survive restarts.
 """
-import glob, json, os, time
+import glob, json, os, subprocess, sys, time
 import streamlit as st
 from src.config import settings
+
+LOG = "data/pipeline.log"
+def run_once():
+    """Spawn one real pipeline iteration BelowNormal, logging to data/pipeline.log.
+    WHY subprocess: Streamlit must stay responsive while moviepy/Gemini run."""
+    os.makedirs("data", exist_ok=True)
+    f = open(LOG, "a"); f.write("\n--- dashboard: run cycle ---\n"); f.flush()
+    p = subprocess.Popen([sys.executable, "-m", "src.main", "--once"], stdout=f, stderr=subprocess.STDOUT,
+                         creationflags=getattr(subprocess, "BELOW_NORMAL_PRIORITY_CLASS", 0))
+    return p.pid
 
 st.set_page_config(page_title="Autositcom Control Center", layout="wide", page_icon="🎬")
 STATE = "data/dashboard_state.json"
@@ -48,7 +58,8 @@ else: st.info("No episodes yet — run a cycle below or drop WAVs into the inges
 # ── 2. PIPELINE CONTROLS ────────────────────────────────────────────────────
 st.header("▶ Pipeline Controls", help="src/main.py run_pipeline_iteration(): distill → script → render → publish, then sleep. Ingestion/transcription run continuously in background.")
 a, b, d = st.columns(3)
-if a.button("▶ Run one full cycle now", help="One iteration over recent transcripts: extract topics → generate script → TTS → compose video → publish. Equivalent to one loop of src/main.py."): st.toast("Cycle requested — watch Logs below (mock-safe)", icon="▶")
+if a.button("▶ Run one full cycle now", help="Spawns `python -m src.main --once` (BelowNormal) using the Distiller threshold saved below; output tails in Logs & Data Browser (data/pipeline.log). Needs GEMINI_API_KEY for live stages."):
+    st.success(f"Pipeline cycle started (PID {run_once()}) — watch Logs below.")
 d.selectbox("Cycle interval (hours)", [1, 6, 12, 24], index=0, key="interval", help="How often main.py repeats. It sleeps 3600s by default between iterations.")
 b.toggle("Auto-cycle enabled", value=S.get("auto", False), key="auto", help="When on, the orchestrator loops forever. When off, only manual cycles run.", on_change=lambda: (S.update(auto=st.session_state.auto), save_state(S)))
 
@@ -64,16 +75,20 @@ st.toggle("Speaker diarization (pyannote)", value=False, help="NOT YET IMPLEMENT
 # ── 4. DISTILLER ────────────────────────────────────────────────────────────
 st.header("✂ Content Distiller", help="src/distiller/topic_extractor.py: Gemini 2.5 Pro reads recent TranscriptChunks and returns ExtractedTopics ranked by comedy_score.")
 with st.form("distiller"):
-    st.slider("Comedy score threshold", 1.0, 10.0, float(S.get("threshold", 7.0)), 0.5, help="TopicExtractor(comedy_threshold). Only topics scoring above this become scripts. Lower = more episodes, weaker jokes.")
+    thr = st.slider("Comedy score threshold", 1.0, 10.0, float(S.get("threshold", 7.0)), 0.5, help="TopicExtractor(comedy_threshold), read by src/main.py load_comedy_threshold() on every cycle. Only topics scoring above this become scripts. Lower = more episodes, weaker jokes.")
     st.number_input("Recent chunks to scan", 1, 500, 50, help="read_recent_chunks(transcripts.jsonl) window fed to Gemini per cycle.")
-    if st.form_submit_button("Save distiller settings"): save_state({**S, "threshold": 7.0}); st.success("Saved to data/dashboard_state.json")
+    if st.form_submit_button("Save distiller settings"): S.update(threshold=thr); save_state(S); st.success(f"Threshold {thr} saved — next cycle will use it.")
 
 # ── 5. SCRIPTWRITER & LORE ──────────────────────────────────────────────────
 st.header("✍ Scriptwriter & Lore Validation", help="src/scriptwriter/: ScriptGenerator builds a SitcomScript from the top topic; validator.py checks every character against docs/CHARACTER_BIBLE.json.")
 s1, s2 = st.columns(2)
 s1.text_area("Character bible (docs/CHARACTER_BIBLE.json)", open("docs/CHARACTER_BIBLE.json").read()[:800] if os.path.exists("docs/CHARACTER_BIBLE.json") else "missing", height=140, help="Canonical BOB & LUM characters. validate_script_characters() rejects scripts inventing unlisted characters.", disabled=True)
 s2.selectbox("Episode template", ["standard", "cold-open", "bottle", "clip-show"], help="docs/EPISODE_TEMPLATES.md structures. Passed as context to ScriptGenerator.generate_script().")
-if s2.button("Validate latest script against bible", help="Runs validator.validate_script_characters() on the newest script. Scripts failing lore validation are not rendered."): st.toast("Validation requested (see Logs)", icon="✅")
+if s2.button("Check character bible", help="Loads docs/CHARACTER_BIBLE.json via validator.load_character_bible() and lists canonical characters. Full validate_script_characters() runs inside ScriptGenerator on each generated script."):
+    try:
+        from src.scriptwriter.validator import load_character_bible
+        s2.success(f"Bible OK — canonical characters: {', '.join(sorted(load_character_bible()))}")
+    except Exception as e: s2.error(f"Bible failed to load: {e}")
 
 # ── 6. RENDERER ─────────────────────────────────────────────────────────────
 st.header("🎞 Renderer (TTS + Video)", help="src/renderer/: TTSEngine (edge-tts) voices each dialogue line + writes SRT; VideoComposer (moviepy) composites vertical video.")
@@ -94,7 +109,7 @@ st.header("⚙ Configuration", help="src/config.py PipelineSettings (pydantic-se
 for k in ["AUDIO_INGEST_DIR", "TRANSCRIPT_STORAGE_DIR", "RENDER_OUTPUT_DIR"] + keys + ["ELEVENLABS_API_KEY"]:
     v = getattr(settings, k, ""); st.text_input(k, "••••••••" if "KEY" in k or "SECRET" in k or "TOKEN" in k else v, disabled=True, help=f"Env var {k}. {'Set ✓' if v else 'NOT SET — dependent stage cannot run live.'}")
 st.header("📜 Logs & Data Browser", help="Live tail of pipeline output and transcripts. If a stage fails, its error appears here first.")
-logs = [os.path.join(settings.TRANSCRIPT_STORAGE_DIR, "transcripts.jsonl"), os.path.join(settings.RENDER_OUTPUT_DIR, "render.log")]
+logs = ["data/pipeline.log", os.path.join(settings.TRANSCRIPT_STORAGE_DIR, "transcripts.jsonl"), os.path.join(settings.RENDER_OUTPUT_DIR, "render.log")]
 for lp in logs:
     if os.path.exists(lp): st.code("\n".join(open(lp, errors="ignore").read().splitlines()[-15:]) or "(empty)", language="text")
     else: st.caption(f"No log yet: `{lp}` — stage has not run.")

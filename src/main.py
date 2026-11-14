@@ -1,7 +1,18 @@
-import os
-import time
+import json, os, sys, time
 import asyncio
 from src.config import settings
+# NOTE: stage modules (pydub/faster-whisper/moviepy) are imported lazily inside
+# the functions that use them — WHY: heavy/native deps unavailable on some
+# interpreters (e.g. pyaudioop/av on Python 3.15) must not block --once, the
+# dashboard, or tests from even starting. Missing dep = one stage logs, not a crash.
+
+STATE_FILE = "data/dashboard_state.json"
+
+def load_comedy_threshold(default: float = 7.0) -> float:
+    """Threshold set in the dashboard (data/dashboard_state.json); WHY: operator
+    tuning in the UI must reach the pipeline without editing code or env."""
+    try: return float(json.load(open(STATE_FILE)).get("threshold", default))
+    except Exception: return default
 from src.ingestion.audio_receiver import start_listening
 from src.ingestion.transcriber import AudioTranscriber
 from src.distiller.topic_extractor import TopicExtractor
@@ -23,7 +34,7 @@ async def run_pipeline_iteration():
     transcripts_file = os.path.join(settings.TRANSCRIPT_STORAGE_DIR, "transcripts.jsonl")
 
     # 3. Topic Analysis & Distillation
-    extractor = TopicExtractor(comedy_threshold=7.0)
+    extractor = TopicExtractor(comedy_threshold=load_comedy_threshold())
     chunks = extractor.read_recent_chunks(transcripts_file)
     topics = extractor.extract_topics(chunks)
 
@@ -85,4 +96,6 @@ def main():
         print("Shutting down pipeline.")
 
 if __name__ == "__main__":
-    main()
+    # --once: single iteration for the dashboard Run Cycle button / cron / tests.
+    if "--once" in sys.argv: asyncio.run(run_pipeline_iteration())
+    else: main()

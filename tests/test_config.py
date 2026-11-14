@@ -8,8 +8,11 @@ from src.schemas import (
     RenderedEpisode,
 )
 
-def test_pipeline_settings_defaults():
-    settings = PipelineSettings()
+def test_pipeline_settings_defaults(monkeypatch):
+    # Isolate from ambient env/.env: defaults must hold with no keys anywhere.
+    for k in ("OPENAI_API_KEY", "GEMINI_API_KEY", "ELEVENLABS_API_KEY", "YOUTUBE_CLIENT_SECRET", "TIKTOK_SESSION_TOKEN"):
+        monkeypatch.delenv(k, raising=False)
+    settings = PipelineSettings(_env_file=None)
     assert settings.AUDIO_INGEST_DIR == "data/audio_ingest"
     assert settings.TRANSCRIPT_STORAGE_DIR == "data/transcripts"
     assert settings.RENDER_OUTPUT_DIR == "data/render_output"
