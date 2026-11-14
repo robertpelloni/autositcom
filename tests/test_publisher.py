@@ -65,3 +65,10 @@ def test_publish_all(mock_script, mock_episode, monkeypatch, capsys):
     assert "YouTube upload simulated" in captured.out
     assert "TikTok upload simulated" in captured.out
     assert "X upload simulated" in captured.out
+def test_publish_all_platform_filter(mock_script, mock_episode, monkeypatch, capsys):
+    monkeypatch.setattr("src.publisher.social_uploader.settings.YOUTUBE_CLIENT_SECRET", "dummy")
+    monkeypatch.setattr("src.publisher.social_uploader.settings.TIKTOK_SESSION_TOKEN", "dummy")
+    uploader = SocialUploader(); uploader.youtube_secret = "dummy"; uploader.tiktok_token = "dummy"
+    uploader.publish_all(mock_script, mock_episode, platforms={"youtube"})
+    out = capsys.readouterr().out
+    assert "YouTube upload simulated" in out and "TikTok" not in out and "X upload" not in out

@@ -100,8 +100,12 @@ r3.toggle("Burn subtitles (SRT)", value=True, help="TTSEngine.generate_srt() tim
 # ── 7. PUBLISHER ────────────────────────────────────────────────────────────
 st.header("📤 Publisher", help="src/publisher/social_uploader.py: publish_all() fans out to YouTube/TikTok/X. ALL MOCK today — toggles control intent only, no live posting until OAuth lands (ROADMAP Phase 2).")
 p = st.columns(3)
+saved = S.get("platforms") or ["youtube", "tiktok", "x"]
 for i, (name, fn) in enumerate([("YouTube", "upload_to_youtube"), ("TikTok", "upload_to_tiktok"), ("X (Twitter)", "upload_to_x")]):
-    p[i].toggle(f"Publish to {name}", value=True, key=f"pub{i}", help=f"SocialUploader.{fn}(). Mock: logs intent, returns success without posting. Needs platform credentials in Configuration.")
+    p[i].toggle(f"Publish to {name}", value=fn.split("_")[-1] in saved or (name == "X (Twitter)" and "x" in saved), key=f"pub{i}", help=f"SocialUploader.{fn}() via publish_all(platforms=...), read by src/main.py load_platforms(). Mock: logs intent, returns success without posting.")
+if st.button("Save publisher selection", help="Persists the toggles above to data/dashboard_state.json; the next pipeline cycle publishes only to the enabled platforms."):
+    plats = [k for k, i in [("youtube", 0), ("tiktok", 1), ("x", 2)] if st.session_state.get(f"pub{i}", True)]
+    S.update(platforms=plats); save_state(S); st.success(f"Publishing to: {', '.join(plats) or 'nothing'}")
 st.text_input("Title template", "{title} — BOB & LUM", help="_extract_metadata() builds title/description/tags from the SitcomScript for every platform.")
 
 # ── 8. CONFIGURATION & LOGS ─────────────────────────────────────────────────

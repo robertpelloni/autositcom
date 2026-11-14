@@ -32,3 +32,7 @@
 ## [0.2.3] - 2026-11-13
 ### Added
 - End-to-end integration test (tests/test_e2e.py) over committed fixture tests/fixtures/sample_transcripts.jsonl + generated real 10s WAV: distill->script->render->publish orchestration proven with external APIs stubbed at the repo's existing seams.
+
+## [0.2.4] - 2026-11-13
+### Added
+- Publisher platform filtering: SocialUploader.publish_all(platforms=...) + dashboard Publisher toggles persisted via Save button -> src/main.py load_platforms(). Default None = all platforms (existing callers unchanged).

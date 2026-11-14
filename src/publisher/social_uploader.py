@@ -77,12 +77,14 @@ class SocialUploader:
             print(f"X Upload Failed: {e}")
             return False
 
-    def publish_all(self, script: SitcomScript, episode: RenderedEpisode):
+    def publish_all(self, script: SitcomScript, episode: RenderedEpisode, platforms=None):
+        """platforms: iterable subset of {'youtube','tiktok','x'} from the
+        dashboard Publisher toggles; None = all (back-compatible default).
+        WHY: an operator disabling a platform in the UI must actually skip it."""
         metadata = self._extract_metadata(script)
         print(f"\n--- Publishing Episode: {metadata['title']} ---")
-
-        self.upload_to_youtube(script, episode)
-        self.upload_to_tiktok(script, episode)
-        self.upload_to_x(script, episode)
-
+        enabled = {"youtube", "tiktok", "x"} if platforms is None else {p.lower() for p in platforms}
+        if "youtube" in enabled: self.upload_to_youtube(script, episode)
+        if "tiktok" in enabled: self.upload_to_tiktok(script, episode)
+        if "x" in enabled: self.upload_to_x(script, episode)
         print("Publishing run complete.\n")

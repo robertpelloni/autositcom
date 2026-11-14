@@ -54,6 +54,6 @@ def test_full_cycle_from_sample_transcripts(tmp_path, capsys, monkeypatch):
     with patch.object(main.settings, "TRANSCRIPT_STORAGE_DIR", str(tdir)):
         assert asyncio.run(main.run_pipeline_iteration()) is None
     VC.return_value.compose_episode.assert_called_once()
-    Pub.return_value.publish_all.assert_called_once_with(script, episode)
+    Pub.return_value.publish_all.assert_called_once_with(script, episode, platforms=None)
     out = capsys.readouterr().out
     assert "Pipeline Iteration Complete" in out and "STAGE-FAIL" not in out

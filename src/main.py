@@ -14,6 +14,13 @@ def load_comedy_threshold(default: float = 7.0) -> float:
     try: return float(json.load(open(STATE_FILE)).get("threshold", default))
     except Exception: return default
 
+def load_platforms():
+    """Dashboard Publisher toggles persisted as state['platforms']; None = all."""
+    try:
+        p = json.load(open(STATE_FILE)).get("platforms")
+        return p if p else None
+    except Exception: return None
+
 
 async def run_pipeline_iteration():
     """
@@ -56,7 +63,7 @@ async def run_pipeline_iteration():
     # 6. Multi-Platform Publisher
     try:
         from src.publisher.social_uploader import SocialUploader
-        SocialUploader().publish_all(script, episode)
+        SocialUploader().publish_all(script, episode, platforms=load_platforms())
     except Exception as e: fail("publisher", e); return
     print("--- Pipeline Iteration Complete ---")
 
